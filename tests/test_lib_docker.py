@@ -107,3 +107,38 @@ def test_render_configuration_template_no_proxy(
 
     config = mock_render.call_args_list[1][0][2]
     assert config["no_proxy"] == "localhost,10.0.0.0/30"
+
+
+@patch("charms.layer.docker.write_daemon_json")
+@patch("charms.layer.docker.render")
+@patch("charms.layer.docker.determine_apt_source")
+@patch("charms.layer.docker.hookenv")
+@patch("charms.layer.docker.DockerOpts")
+def test_render_configuration_template_empty_no_proxy(
+    mock_docker_opts, mock_hookenv, mock_determine_apt, mock_render, mock_write_daemon
+):
+    """Test if the render_configuration_template produced the right dict."""
+    mock_determine_apt.return_value = "apt"
+    mock_docker_opts.return_value.to_s.return_value = ""
+    env_proxy = {
+        "http_proxy": "",
+        "https_proxy": "",
+        "NO_PROXY": "",
+    }
+
+    charm_config = {
+        "docker-opts": "",
+        "http_proxy": "",
+        "https_proxy": "",
+        "no_proxy": "",
+    }
+    mock_hookenv.config.side_effect = lambda *args: (
+        charm_config[args[0]] if args else charm_config
+    )
+    mock_hookenv.config.return_value = charm_config
+    mock_hookenv.env_proxy_settings.return_value = env_proxy
+
+    render_configuration_template(service=True)
+
+    config = mock_render.call_args_list[1][0][2]
+    assert config["no_proxy"] == ""
