@@ -1,4 +1,3 @@
-import ipaddress
 import json
 
 from subprocess import check_output
