@@ -1,4 +1,3 @@
-import ipaddress
 import json
 
 from subprocess import check_output
@@ -62,19 +61,8 @@ def render_configuration_template(service=False):
     modified_config = dict(config())
     parsed_hosts = ""
     if environment_config is not None:
-        hosts = []
-        for address in environment_config.get("NO_PROXY", "").split(","):
-            address = address.strip()
-            try:
-                net = ipaddress.ip_network(address)
-                ip_addresses = [str(ip) for ip in net.hosts()]
-                if ip_addresses == []:
-                    hosts.append(address)
-                else:
-                    hosts += ip_addresses
-            except ValueError:
-                hosts.append(address)
-        parsed_hosts = ",".join(hosts)
+        hosts = environment_config.get("NO_PROXY", "").split(",")
+        parsed_hosts = ",".join(host.strip() for host in hosts)
         environment_config.update({"NO_PROXY": parsed_hosts, "no_proxy": parsed_hosts})
         for key in ["http_proxy", "https_proxy", "no_proxy"]:
             if not modified_config.get(key):
